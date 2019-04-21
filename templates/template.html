@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Vacation In Hawaii</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/template.css') }}">
+</head>
+<body>
+    <header>
+            <div class="topnav" id="myTopnav">
+                    <a href="{{ url_for('home') }}" class="active">Home</a>
+                    <a href="{{ url_for('welcome') }}">Welcome</a>
+                    <a href="{{ url_for('precipitation') }}">Precipitation</a>
+                    <a href="{{ url_for('stations') }}">Stations</a>
+                    <a href="{{ url_for('temperature') }}">Observations</a>
+                    <a href="{{ url_for('starttrip',start=start_date) }}">Vacation Start Date</a>
+                    <a href="{{ url_for('startendtrip',start=start_date,end=end_date) }}">Vacation Start and End Date</a>
+                  </div>
+        <div class="container">
+          <h1 class="logo">Vacation In Hawaii</h1>
+          
+        <!-- <strong><nav>
+            <ul class="menu">
+              <li><a href="{{ url_for('home') }}">Home</a></li>
+              <li><a href="{{ url_for('welcome') }}">Welcome</a></li>
+            </ul>
+          </nav></strong> -->
+        </div>
+        <img src="/Images/surfs-up.jpeg">
+
+      </header>
+      {% block content %}
+      {% endblock %}
+</body>
+</html>
