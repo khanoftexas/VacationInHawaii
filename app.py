@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 
 from flask import Flask, jsonify,render_template
+from flask_table import Table, Col
+
 
 
 #dependencies
@@ -71,11 +73,19 @@ def precipitation():
 @app.route("/api/stations")
 def stations():
 	#return a json list of stations from the dataset.
-	results = session.query(Station.station).all()
+	#results = session.query(Station.name,Station.station).all()
 
-	all_stations = list(np.ravel(results))
+	#all_stations = list(np.ravel(results))
 
-	return jsonify(all_stations)
+	# return jsonify(all_stations)
+	items = session.query(Station.station,Station.name).all()
+
+	# Populate the table
+	tableStations = ItemTable(items)
+
+	# Print the html
+	return (f"Station List in Hawaii<br><br>"
+			f"{tableStations.__html__()}")
 
 @app.route("/api/temperature")
 def temperature():
@@ -126,6 +136,10 @@ def startendtrip(start_date, end_date):
 	round_trip_temps = list(np.ravel(results))
 
 	return jsonify(round_trip_temps)
+
+class ItemTable(Table):
+	station = Col('Station')
+	name = Col('Name')
 
 if __name__ == '__main__':
     app.run(debug=True)
