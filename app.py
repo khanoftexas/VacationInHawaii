@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 from flask import Flask, render_template, redirect, jsonify
 
 
@@ -5,13 +8,10 @@ from flask import Flask, render_template, redirect, jsonify
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
-from sqlalchemy import func
+from sqlalchemy import create_engine, func, desc
 
-# import numpy as np
-# import pandas as pd
-
-import datetime
+import datetime as dt
+from dateutil.relativedelta import relativedelta
 
 app = Flask(__name__)
 
@@ -19,8 +19,8 @@ engine = create_engine("sqlite:///hawaii.sqlite")
 Base = automap_base()
 Base.prepare(engine, reflect=True)
 
-Measurements = Base.classes.measurements
-Stations = Base.classes.stations
+Measurement = Base.classes.measurement
+Station = Base.classes.station
 
 session = Session(engine)
 
@@ -45,7 +45,11 @@ def welcome ():
 @app.route("/api/v1.0/precipitation")
 def precipitation():
 	#Query for the dates and temperature observations from the last year.
-	results = session.query(Measurements.date,Measurements.prcp).filter(Measurements.date >= "08-23-2017").all()
+	last_date = session.query(Measurement.date).order_by(desc(Measurement.date)).first()
+	last_date = last_date.date
+	last_date = dt.datetime.strptime(last_date, "%Y-%m-%d")
+	last_year_date =  last_date - dt.timedelta(days=365)
+	results = session.query(Measurement.date,Measurement.prcp).filter(Measurement.date >= last_year_date).all()
 
 	year_prcp = list(np.ravel(results))
 	#results.___dict___
@@ -53,7 +57,7 @@ def precipitation():
 	"""year_prcp = []
 	for result in results:
 		row = {}
-		row[Measurements.date] = row[Measurements.prcp]
+		row[Measurement.date] = row[Measurement.prcp]
 		year_prcp.append(row)"""
 
 	return jsonify(year_prcp)
@@ -61,7 +65,7 @@ def precipitation():
 @app.route("/api/v1.0/stations")
 def stations():
 	#return a json list of stations from the dataset.
-	results = session.query(Stations.station).all()
+	results = session.query(Station.station).all()
 
 	all_stations = list(np.ravel(results))
 
@@ -71,7 +75,7 @@ def stations():
 def temperature():
 	#Return a json list of Temperature Observations (tobs) for the previous year
 	year_tobs = []
-	results = session.query(Measurements.tobs).filter(Measurements.date >= "08-23-2017").all()
+	results = session.query(Measurement.tobs).filter(Measurement.date >= "08-23-2017").all()
 
 	year_tobs = list(np.ravel(results))
 
@@ -80,24 +84,24 @@ def temperature():
 @app.route("/api/v1.0/<start>")
 def start_trip_temp(start_date):
 	start_trip = []
+	sel = [func.min(Measurement.tobs), 
+       func.max(Measurement.tobs), 
+       func.avg(Measurement.tobs)]
 
-	results_min = session.query(func.min(Measurements.tobs)).filter(Measurements.date == start_date).all()
-	results_max = session.query(func.max(Measurements.tobs)).filter(Measurements.date == start_date).all()
-	results_avg = session.query(func.avg(Measurements.tobs)).filter(Measurements.date == start_date).all()
-
-	start_trip = list(np.ravel(results_min,results_max, results_avg))
+	results = session.query(*sel).filter(Measurement.date == start_date).all()
+	start_trip = list(np.ravel(results))
 
 	return jsonify(start_trip)
 
 def greater_start_date(start_date):
 
 	start_trip_date_temps = []
-
-	results_min = session.query(func.min(Measurements.tobs)).filter(Measurements.date >= start_date).all()
-	results_max = session.query(func.max(Measurements.tobs)).filter(Measurements.date >= start_date).all()
-	results_avg = session.query(func.avg(Measurements.tobs)).filter(Measurements.date >= start_date).all()
-
-	start_trip_date_temps = list(np.ravel(results_min,results_max, results_avg))
+	sel = [func.min(Measurement.tobs), 
+       func.max(Measurement.tobs), 
+       func.avg(Measurement.tobs)]
+	
+	results = session.query(*sel).filter(Measurement.date >= start_date).all()
+	start_trip_date_temps = list(np.ravel(results))
 
 	return jsonify(start_trip_date_temps)
 
@@ -105,25 +109,13 @@ def greater_start_date(start_date):
 
 def start_end_trip(start_date, end_date):
 
-	start_end_trip_temps = []
-
-	results_min = session.query(func.min(Measurements.tobs)).filter(Measurements.date == start_date, Measurements.date == end_date).all()
-	results_max = session.query(func.max(Measurements.tobs)).filter(Measurements.date == start_date, Measurements.date == end_date).all()
-	results_avg = session.query(func.avg(Measurements.tobs)).filter(Measurements.date == start_date, Measurements.date == end_date).all()
-
-	start_end_trip_temps = list(np.ravel(results_min,results_max, results_avg))
-
-	return jsonify(start_end_trip_temps)
-
-def start_end_trip(start_date, end_date):
-
 	round_trip_temps = []
-
-	results_min = session.query(func.min(Measurements.tobs)).filter(Measurements.date >= start_date, Measurements.date >= end_date).all()
-	results_max = session.query(func.max(Measurements.tobs)).filter(Measurements.date >= start_date, Measurements.date >= end_date).all()
-	results_avg = session.query(func.avg(Measurements.tobs)).filter(Measurements.date >= start_date, Measurements.date >= end_date).all()
-
-	round_trip_temps = list(np.ravel(results_min,results_max, results_avg))
+	sel = [func.min(Measurement.tobs), 
+       func.max(Measurement.tobs), 
+       func.avg(Measurement.tobs)]
+	
+	results = session.query(*sel).filter(Measurement.date >= start_date, Measurement.date <= end_date).all()
+	round_trip_temps = list(np.ravel(results))
 
 	return jsonify(round_trip_temps)
 
