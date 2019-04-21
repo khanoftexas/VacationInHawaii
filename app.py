@@ -13,6 +13,7 @@ from sqlalchemy.pool import StaticPool
 
 import datetime as dt
 from dateutil.relativedelta import relativedelta
+# from itertools import *
 
 engine = create_engine("sqlite:///Resources/hawaii.sqlite",\
                     connect_args={'check_same_thread':False},\
@@ -58,13 +59,14 @@ def precipitation():
 	
 	#results.___dict___
 	#Create a dictionary using 'date' as the key and 'prcp' as the value.
-	year_prcp = []
-	for result in results:
-		row = {}
-		row[Measurement.date] = row[Measurement.prcp]
-		year_prcp.append(row)
+	# year_prcp = []
+	# for result in results:
+	# 	row = {}
+	# 	row[Measurement.date] = row[Measurement.prcp]
+	# 	year_prcp.append(row)
+	year_prcp_dict=dict(zip(*[iter(year_prcp)]*2)) #dict(itertools.zip_longest(*[iter(year_prcp)] * 2, fillvalue=""))
 
-	return jsonify(year_prcp)
+	return jsonify(year_prcp_dict)
 
 @app.route("/api/v1.0/stations")
 def stations():
