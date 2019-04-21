@@ -37,16 +37,16 @@ def home():
 #List all available routes
 def welcome ():
 	return (
-		f"Welcome to the Surf Up API<br>"
-		f"Available Routes:<br>"
-		f"/api/v1.0/rain<br>"
-		f"/api/v1.0/stations<br>"
-		f"/api/v1.0/tobs<br>"
-		f"/api/v1.0/start<br>"
-		f"/api/v1.0/start/end<br>"
+		f"Welcome to the Surf Up API<br><br>"
+		f"Available Routes:<br><br>"
+		f"<a href=api/precipitation>/api/precipitation</a><br><br>"
+		f"<a href=api/stations>/api/stations</a><br><br>"
+		f"<a href=api/temperature>/api/temperature</a><br><br>"
+		f"<a href=api/<start>/api/<start></a><br><br>"
+		f"<a href=api/<start>/<end>/api/<start>/<end></a><br>"
 	)
 	
-@app.route("/api/v1.0/rain")
+@app.route("/api/precipitation")
 def precipitation():
 	#Query for the dates and temperature observations from the last year.
 	last_date = session.query(Measurement.date).order_by(desc(Measurement.date)).first()
@@ -68,7 +68,7 @@ def precipitation():
 
 	return jsonify(year_prcp_dict)
 
-@app.route("/api/v1.0/stations")
+@app.route("/api/stations")
 def stations():
 	#return a json list of stations from the dataset.
 	results = session.query(Station.station).all()
@@ -77,7 +77,7 @@ def stations():
 
 	return jsonify(all_stations)
 
-@app.route("/api/v1.0/tobs")
+@app.route("/api/temperature")
 def temperature():
 	#Return a json list of Temperature Observations (tobs) for the previous year
 	last_date = session.query(Measurement.date).order_by(desc(Measurement.date)).first()
@@ -91,7 +91,7 @@ def temperature():
 
 	return jsonify(year_tobs)
 
-@app.route("/api/v1.0/start")
+@app.route("/api/<start>")
 def starttrip(start_date):
 	start_trip = []
 	sel = [func.min(Measurement.tobs), 
@@ -115,7 +115,7 @@ def greater_start_date(start_date):
 
 	return jsonify(start_trip_date_temps)
 
-@app.route("/api/v1.0/startend")
+@app.route("/api/<start>/<end>")
 def startendtrip(start_date, end_date):
 	round_trip_temps = []
 	sel = [func.min(Measurement.tobs), 
