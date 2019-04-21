@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from flask import Flask, render_template, redirect, jsonify
+from flask import Flask, jsonify
 
 
 #dependencies
@@ -13,9 +13,7 @@ from sqlalchemy import create_engine, func, desc
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 
-app = Flask(__name__)
-
-engine = create_engine("sqlite:///hawaii.sqlite")
+engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 Base = automap_base()
 Base.prepare(engine, reflect=True)
 
@@ -23,6 +21,8 @@ Measurement = Base.classes.measurement
 Station = Base.classes.station
 
 session = Session(engine)
+
+app = Flask(__name__)
 
 @app.route("/")
 def home():
@@ -38,8 +38,8 @@ def welcome ():
 		f"/api/v1.0/precipitation<br>"
 		f"/api/v1.0/stations<br>"
 		f"/api/v1.0/tobs<br>"
-		f"/api/v1.0/<start><br>"
-		f"/api/v1.0<start>/<end><br>"
+		f"/api/v1.0/start<br>"
+		f"/api/v1.0/start/end<br>"
 	)
 	
 @app.route("/api/v1.0/precipitation")
@@ -54,11 +54,11 @@ def precipitation():
 	year_prcp = list(np.ravel(results))
 	#results.___dict___
 	#Create a dictionary using 'date' as the key and 'prcp' as the value.
-	"""year_prcp = []
+	year_prcp = []
 	for result in results:
 		row = {}
 		row[Measurement.date] = row[Measurement.prcp]
-		year_prcp.append(row)"""
+		year_prcp.append(row)
 
 	return jsonify(year_prcp)
 
@@ -74,8 +74,12 @@ def stations():
 @app.route("/api/v1.0/tobs")
 def temperature():
 	#Return a json list of Temperature Observations (tobs) for the previous year
+	last_date = session.query(Measurement.date).order_by(desc(Measurement.date)).first()
+	last_date = last_date.date
+	last_date = dt.datetime.strptime(last_date, "%Y-%m-%d")
+	last_year_date =  last_date - dt.timedelta(days=365)
 	year_tobs = []
-	results = session.query(Measurement.tobs).filter(Measurement.date >= "08-23-2017").all()
+	results = session.query(Measurement.tobs).filter(Measurement.date >= last_year_date).all()
 
 	year_tobs = list(np.ravel(results))
 
