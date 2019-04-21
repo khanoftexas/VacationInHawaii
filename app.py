@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify,render_template
 
 
 #dependencies
@@ -9,11 +9,14 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func, desc
+from sqlalchemy.pool import StaticPool
 
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 
-engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///Resources/hawaii.sqlite",\
+                    connect_args={'check_same_thread':False},\
+                    poolclass=StaticPool)
 Base = automap_base()
 Base.prepare(engine, reflect=True)
 
@@ -35,14 +38,14 @@ def welcome ():
 	return (
 		f"Welcome to the Surf Up API<br>"
 		f"Available Routes:<br>"
-		f"/api/v1.0/precipitation<br>"
+		f"/api/v1.0/rain<br>"
 		f"/api/v1.0/stations<br>"
 		f"/api/v1.0/tobs<br>"
 		f"/api/v1.0/start<br>"
 		f"/api/v1.0/start/end<br>"
 	)
 	
-@app.route("/api/v1.0/precipitation")
+@app.route("/api/v1.0/rain")
 def precipitation():
 	#Query for the dates and temperature observations from the last year.
 	last_date = session.query(Measurement.date).order_by(desc(Measurement.date)).first()
@@ -52,6 +55,7 @@ def precipitation():
 	results = session.query(Measurement.date,Measurement.prcp).filter(Measurement.date >= last_year_date).all()
 
 	year_prcp = list(np.ravel(results))
+	
 	#results.___dict___
 	#Create a dictionary using 'date' as the key and 'prcp' as the value.
 	year_prcp = []
@@ -85,8 +89,8 @@ def temperature():
 
 	return jsonify(year_tobs)
 
-@app.route("/api/v1.0/<start>")
-def start_trip_temp(start_date):
+@app.route("/api/v1.0/start")
+def starttrip(start_date):
 	start_trip = []
 	sel = [func.min(Measurement.tobs), 
        func.max(Measurement.tobs), 
@@ -109,10 +113,8 @@ def greater_start_date(start_date):
 
 	return jsonify(start_trip_date_temps)
 
-@app.route("/api/v1.0/<start>/<end>")
-
-def start_end_trip(start_date, end_date):
-
+@app.route("/api/v1.0/startend")
+def startendtrip(start_date, end_date):
 	round_trip_temps = []
 	sel = [func.min(Measurement.tobs), 
        func.max(Measurement.tobs), 
@@ -122,7 +124,6 @@ def start_end_trip(start_date, end_date):
 	round_trip_temps = list(np.ravel(results))
 
 	return jsonify(round_trip_temps)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
